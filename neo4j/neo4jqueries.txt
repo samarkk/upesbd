@@ -1,0 +1,217 @@
+MATCH (anything) return anything
+MATCH (anything) return anything LIMIT 5
+MATCH (person:Person) return person LIMIT 5
+
+MATCH(actor:Person)-[acted:ACTED_IN]->(movie:Movie)
+return actor, acted, movie
+LIMIT 5
+
+MATCH(movie: Movie)
+MATCH (director:Person)-[:DIRECTED]->(movie)
+MATCH (director)-[:ACTED_IN]->(movie)
+return movie.title, director.name
+
+MATCH(movie: Movie)
+OPTIONAL MATCH (director:Person)-[:DIRECTED]->(movie)<-[:ACTED_IN]-(director)
+return movie.title, director.name
+
+if A has a contact B and B has a contact C then return names for A, B, C
+
+// with properties of nodes requested we do not have a graph result and hence no graph view
+MATCH(p1:Person)-[:HAS_CONTACT]->(p2:Person)-[:HAS_CONTACT]->(p3:Person)
+where p1 <> p3
+return p1.name, p2.name, p3.name
+LIMIT 5
+
+
+MATCH(p1:Person)-[:HAS_CONTACT]->(p2:Person)-[:HAS_CONTACT]->(p3:Person)
+where p1 <> p3
+return p1, p2, p3
+LIMIT 5
+
+List a contact's name along with a movie they directed if they directed one
+
+MATCH (p: Person)-[:HAS_CONTACT]->(c:Person)
+OPTIONAL MATCH (c)-[:DIRECTED]->(movie:Movie)
+return p.name, c.name,  movie.title
+limit 5
+
+# return a node basis attributes
+MATCH (tom:Person{name: 'Tom Hanks', born: 1956})
+Return tom
+LIMIT 1
+
+# find notes matching attributes using the where clause
+MATCH (tom:Person)
+where tom.name = 'Tom Hanks' and tom.born = 1956
+Return tom
+LIMIT 1
+
+MATCH(someone: Person)
+where someone.born > 1956
+Return someone
+LIMIT 3
+
+MATCH(someone: Person)
+where someone.name >= 'T' and someone.name <= 'U'
+Return someone
+LIMIT 5
+
+MATCH(someone: Person)
+where someone.born in [1965, 1967, 1970]
+Return someone
+LIMIT 5
+
+MATCH (movie: Movie)
+where movie.title = 'Unforgiven' and not (person:Person)-[:DIRECTED]->(movie)
+return person, movie
+
+# use regular expressions to match attributes
+MATCH (movie: Movie)
+where movie.title =~ '(?i).*The.*'
+return movie
+limit 10
+
+MATCH (movie: Movie)
+where movie.title =~ 'The.*'
+return movie
+limit 10
+
+# skip, order by,limit
+MATCH (actor:Preson)-[role:ACTED_IN]->(movie: Movie)
+where movie.title = 'Top Gun' 
+return actor.name, movie.title
+order by role.earnings desc
+limit 10
+
+Find all of Tom Hanks' contacts who were born 1960 or later and have earnt over $10M from a single movie. Return their name, birth year and earnings and the movie title
+
+match (b)-[role:ACTED_IN]-(m:Movie)
+where b.born >= 1960 and role.earnings >= 1000000
+return b.name, b.born, m.title, role.earnings
+order by role.earnings desc
+limit 100
+
+# return the unique list of all actors who have earned more than one million dollary in any role
+# distinct
+match (p:Person)-[r:ACTED_IN]->(m:Movie)
+where r.earnings > 100000
+return distinct p.name
+
+# return the number of movies tom hanks has acted in, total, min, max, average earnings
+# aggregate functions - count, min, max, average(avg)
+match (p:Person)-[r:ACTED_IN]-(m:Movie)
+where p.name = 'Tom Hanks'
+return count(m) as nm, sum(r.earnings) as totalearnings,
+min(r.earnings) as minearn, max(r.earnings) as maxearn,
+avg(r.earnings) as avgearn
+
+# using mathematical functions
+match (p:Person)-[r:ACTED_IN]-(m:Movie)
+where p.name = 'Tom Hanks'
+return count(m) as nm, round(sum(r.earnings)/1000000, 1) as totalearningsmn,
+round(min(r.earnings)/1000000, 1) as minearnmn, round(max(r.earnings)/1000000, 1) as maxearnmn,
+round(avg(r.earnings)/1000000, 1) as avgearnmn
+
+# create a node
+create(benqp1:Projector:ShortThrow)
+# above benqp1 is the node and it has two labels Projector and ShortThrow
+create(epsonp1:Projector:ShortThrow{throwratio: 0.55, price: 3000, resolution: '720p'}) return epsonp1
+# create relationship
+create(cat: Cat{name: 'Fluffy'})-[:GROOMS]->(cat) return cat
+create(cat: Cat{name: 'Fluffy'})-[:GROOMS{period: 'Daily'}]->(cat) return cat
+
+# cannot delete a node that has relationships
+match(tom:Person{name: 'Tom Hanks'})
+delete tom
+
+# delete the relationships along side
+# deleting all relationships for tom hanks and the tom hanks node
+match(tom:Person{name: 'Tom Hanks'})-[r]-()
+delete tom, r
+
+# to delete all data 
+match (node)
+detach delete node
+
+# update
+# add a gender property and then remove it
+match (tom: Person{name: 'Tom Hanks'})
+set tom.gender = 'male'
+return tom
+
+match (tom: Person{name: 'Tom Hanks'})
+remove tom.gender
+return tom
+
+# set a label and then remove it
+match (tom: Person{name: 'Tom Hanks'})
+set tom:Handsome
+return tom
+
+match (tom: Person{name: 'Tom Hanks'})
+remove tom:Handsome
+return tom
+
+# set properties to a computed measure
+match (tom: Person{name: 'Tom Hanks'})-[:HAS_CONTACT]->(contact:Person)
+with tom, count(contact) as no_contacts
+set tom.no_contacts = no_contacts
+return tom
+
+# merge will create a node if it does not exist and apply changes
+match(aamir:Person{name: 'Aamir Khan'})
+return aamir
+merge(aamir:Person{name: 'Aamir Khan'})
+return aamir
+
+# merge different nodes, relationship and set attributes on nodes and relationships
+merge(aamir:Person{name: 'Aamir Khan'})
+merge(movie:Movie{title: 'Dangal'})
+merge(aamir)-[role:ACTED_IN]->(movie)
+merge(aamir)-[drctd:DIRECTED]->(movie)
+set aamir.born = 1965, role.roles=['Mahavir Singh Phogat']
+return aamir, movie
+
+# n degree relationships
+match(tom: Person{name: 'Tom Hanks'})-[:HAS_CONTACT]->(other:Person)-[:HAS_CONTACT]->(another)
+return tom, other, another
+limit 1
+
+# specifying path length
+match(tom: Person{name: 'Tom Hanks'})-[:HAS_CONTACT*2]->(another:Person)
+return tom, another
+limit 1
+
+# variable path lengths
+match(tom: Person{name: 'Tom Hanks'})-[rel:HAS_CONTACT*2..]->(another:Person)
+return tom, rel, another
+limit 5
+
+# finding the path length for a relationship
+match(keanu:Person{name: 'Keanu Reeves'})
+match(tom:Person{name: 'Tom Cruise'})
+match path = ((keanu)-[:HAS_CONTACT*]->(tom))
+return length(path)
+limit 1
+
+# finding the path length
+match(keanu:Person{name: 'Keanu Reeves'})
+match(tom:Person{name: 'Tom Cruise'})
+match path = ((keanu)-[:HAS_CONTACT*..9]->(tom))
+return length(path)
+limit 1
+
+# finding the shortest path
+match(keanu:Person{name: 'Keanu Reeves'})
+match(tom:Person{name: 'Tom Cruise'})
+match path = shortestPath((keanu)-[:HAS_CONTACT*..9]->(tom))
+return path, length(path) as path_length
+limit 1
+
+# finding all shortest paths
+match(keanu:Person{name: 'Keanu Reeves'})
+match(tom:Person{name: 'Tom Cruise'})
+match path = allShortestPaths((keanu)-[:HAS_CONTACT*..9]->(tom))
+return path, length(path) as path_length
+
