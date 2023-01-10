@@ -1,1 +1,146 @@
+# install java 
+#  yum search openjdk
+# install openjdk-devel  java versions 8 and 11
+sudo yum install java-1.8.0-openjdk-devel.x86_64
+sudo yum install java-11-openjdk-devel.x86_64 
+# set JAVA_HOME environmental variables in /etc/profile
+# and add the bin directory to path 
+# sudo visudo and add HOME and JAVA_HOME to env_keep
 
+
+# download hadoop tgz and unzip 
+sudo tar xvzf <path where hadoop tgz is downloaded> -C /usr/lib
+# link the diretory under /usr/lib to /usr/lib/hadoop
+sudo ln -s /usr/lib/<extracted hadoop folder> /usr/lib/hadoop
+# set HADOOP_HOME environmental variables in /etc/profile
+# and add the bin directory to path 
+# add hadoop bin directory to secure_path
+
+# from the configs directory copy hfds-site.xml, mapred-site.xml, core-site.xml, yarn-site.xml, hadoop-env.sh to /usr/lib/hadoop/etc/hadoop
+# note the HADOOP_HEAPSIZE_MAX and HADOOP_HEAPSIZE_MIN values
+# if left to default they are 1g and as processes start personal machines used for development will not be able to keep up
+
+# as per the hdfs configuration make the direcories for name node, data node, secondary name node
+sudo mkdir -p /var/lib/hadoop/{nndir,snndir,datadir}
+
+#  format the namenode to start hdfs
+sudo hdfs namenode -format
+# start the namenode and datanode on the machine
+sudo hdfs --daemon start namenode
+sudo hdfs --daemon start datanode
+# verify that the processes are up
+sudo jps
+# verify that namenode port is occupied
+sudo netstat -tulpn | grep 9870
+
+# check the hdfs web ui in the browser
+# on the vm stop, disable the firewall
+sudo systemctl stop firewalld
+sudo systemctl disaable firewalld
+# either use the host only adapter address or use port forwarding
+
+# set up the directories that will be needed
+# set up the directory for user samar and change ownership
+sudo hdfs dfs -mkdir -p /user/samar
+# check the hdfs status from the root
+hdfs dfs -ls -R /
+# note that root is the owner
+# copy shakespeare.txt in the local file system to hdfs
+hdfs dfs -put /home/samar/shakespeare.txt
+# should see permission denied, change ownership and try again
+sudo hdfs dfs -chown samar:hadoop /user/samar
+hdfs dfs -put /home/samar/shakespeare.txt
+# make a world writeable tmp directory
+sudo hdfs dfs -mkdir /tmp
+sudo hdfs dfs -chmod -R 777 /tmp
+
+# version
+hdfs version
+hadoop version
+
+# in hdfs, home directory is /user/{USER_NAME}
+# if we omit the target destination then default home directory is assumed
+# mkdir 
+hdfs dfs -mkdir demodir
+# list 
+hdfs dfs -ls 
+# put stuff from local file system into hdfs
+# create a test file and put it into hdfs
+# lets use cat to pipe into a file, press Ctrl + d when done
+cat > /home/samar/test.txt
+line 1
+line 2
+line 3
+# confirm that  the file has been created and has the content
+cat /home/samar/test.txt
+# put in into the demodir in hdfs
+hdfs dfs -put /home/samar/test.txt demodir
+# confirm that the file is there in the demodir
+hdfs dfs -ls -R 
+hdfs dfs -cat demodir/test.txt
+# use copyFromLocal to carry out the same task
+hdfs dfs -copyFromLocal /home/samar/test.txt demodir
+# add on the f switch to force overwrite - hdfs is a write once, read many system
+hdfs dfs -copyFromLocal -f  /home/samar/test.txt demodirs
+# copy demodir from hdfs to /home/samar
+hdfs dfs -copyToLocal demodir /home/samar
+# mv / rename test.txt to testinhdfs.txt and do a listing check
+hdfs dfs -mv demodir/test.txt  demodir/testinhdfs.txt
+hdfs dfs -ls demodir
+# cp - copy the renamed testinhdfs.txt to test.txt and do a listing check
+hdfs dfs -cp demodir/testinhdfs.txt demodir/test.txt
+hdfs dfs -ls demodir
+# get - same as copyToLocal - use it to get testinhdfs.txt to the local directory
+hdfs dfs -get demodir/testinhdfs.txt /home/samar
+cat /home/samar/testinhdfs.txt
+# remove testinhdfs.txt from demodir
+hdfs dfs -rm demodir/testinhdfs.txt
+# to remove a directory we have to add on the recursive and force switched -r -f
+hdfs dfs -rm -r -f demodir
+# let us move the demodir from the local file system to hdfs
+hdfs dfs -moveFromLocal /home/samar/demodir
+# verify that demodir is not there in the local system and it is there in the hdfs
+ls -l /home/samar/demodir
+hdfs dfs -ls
+# tail a file - tail will return the last 1KBof data
+hdfs dfs -tail shakespeare.txt
+# chown, chgrp
+sudo hdfs dfs -chgrp /user/samar
+hdfs dfs -ls /user
+#setrep - set replication factor of a file
+hdfs dfs -setrep 3 shakespeare.txt
+# du - disk usage
+hdfs dfs -du -h -s /
+# df - disk free
+hdfs dfs -df -h 
+#touchz creates a file of zero length.
+hdfs dfs -touchz empty.txt
+# test -e file exists, -z file is 0 length, -d directory
+hdfs dfs -test -d empty.txt
+echo $? # should be 1
+hdfs dfs -test -e empty.txt
+echo $? # should be 0
+hdfs dfs -test -z empty.txt
+echo $? # echo should be 0
+#stat - returns the stat information on the path
+hdfs dfs -stat /user/samar
+#chmod - change permissions for a path
+# appendToFile - append single src, or multiple srcs from local file system to the destination file system
+hdfs dfs -appendToFile test.txt empty.txt
+#checksum - returns the checksum information of a file
+hdfs dfs -checksum empty.txt
+#count - counts the number of directories, files and bytes under the paths that match the specified file pattern
+hdfs dfs -count /user/samar
+hdfs dfs -count / 
+#find - finds all files that match the specified expression and applies selected actions to them. If no path is specified then defaults to the current working directory. If no expression is specified then defaults to -print. Primary expressions recognized are -name and -iname
+hdfs dfs -find / -name em*
+
+#fsetattr - sets an extended attribute name and value for a file or directory
+hdfs dfs -setfattr -n user.city -v Delhi empty.txt
+hdfs dfs -getfattr -d empty.txt
+
+#truncate - truncate all files that match the specified file pattern to the specified length. The -w flag requests that the command waits for block recovery to complete, if necessary. Without -w flag the file may remain unclosed for some time while the recovery is in progress During this time file cannot be reopened for append
+hdfs dfs -truncate 1000 shakespeare.txt
+
+#usage - returns help for the command
+hdfs dfs -usage setfattr
