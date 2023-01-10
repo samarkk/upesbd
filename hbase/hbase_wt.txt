@@ -17,7 +17,7 @@ cat /usr/lib/hbase/conf/hbase-site.xml
 # empty the zookeeper directory
 sudo rm -rf /var/lib/hbzk/*
 # start hbase
-sudo /usr/lib/hbase/start-hbase.sh
+sudo /usr/lib/hbase/bin/start-hbase.sh
 # start the shell
 hbase shell
 # check the status
