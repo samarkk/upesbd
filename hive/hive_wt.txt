@@ -1,1 +1,46 @@
+# need to have java installed, JAVA_HOME set
+# download hive and extract it to /usr/lib
+sudo tar xvzf <downloaded hive tgz> -C /usr/lib
+# link it to hive
+sudo ln -s /usr/lib/<extracted hive folder> /usr/lib/hive
+# set HIV_HOME to /usr/lib/hive add it to /etc/profile and the bin directory to the PATH
+# for hive metastre use mysql
+# install mysql
+# go to https://dev.mysql.com/downloads/repo/yum/
+# and download the appropriate repo package
+# install the repo
+sudo rpm -ivh <downloaded repo rpm package>
+# then 
+sudo yum install mysql-community-server
+# start mysqld service 
+sudo systemctl start mysqld
+# get the mysql password created during installation
+ sudo grep 'temporary password' /var/log/mysqld.log
+ # log in to mysql
+ # note no space between p and the temp password - if it has special characters, wrap the password in quotes
+mysql -u root -p<the temp password>
+# change the root password
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'MyNewPass4!';
+# allow weak password
+UNINSTALL COMPONENT 'file://component_validate_password';
+# create the hive database and hive user
+create database hive;
+create user 'hive'@'localhost' identified by 'hive';
+create user 'hive'@'l27.0.0.1' identified by 'hive';
+# grant the hive user all privileges on the hive database
+grant all privileges on hive.* to 'hive'@'localhost'  with grant option;
+grant all privileges on hive.* to 'hive'@'127.0.0.1'  with grant option;
+flush privileges;
 
+# run schematool
+sudo schematool -dbType mysql -url jdbc:mysql://localhost/hive --passWord hive -initSchema
+# the command above will create the hive metastore tables
+# start the hive metastore
+hive --service metastore 2>&1 &>/dev/null &
+# start yarn to check out hive
+sudo yarn --daemon start resourcemanager
+sudo yarn --daemon start nodemanager
+# verify
+sudo jps
+# run hive and check
+hive
