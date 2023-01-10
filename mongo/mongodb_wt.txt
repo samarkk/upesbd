@@ -1,0 +1,101 @@
+# installing mongodb on centos 7
+# https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-red-hat/
+# Create a /etc/yum.repos.d/mongodb-org-6.0.repo file so that you can install MongoDB directly using yum:
+sudo vim /etc/yum.repos.d/mongodb-org-6.0.repo
+[mongodb-org-6.0]
+name=MongoDB Repository
+baseurl=https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/6.0/x86_64/
+gpgcheck=1
+enabled=1
+gpgkey=https://www.mongodb.org/static/pgp/server-6.0.asc
+
+sudo yum install -y mongodb-org
+
+which mongosh
+issue mongosh in the shell and we will connect to the default server running on port 27017
+
+# run mongoimport to import json data
+ mongoimport -v --host localhost --port 27017 -d mflix d/tmp/sample_mflix/movies.json
+ mongoimport -v --host localhost --port 27017 -d mflix d/tmp/sample_mflix/sessions.json
+ mongoimport -v --host localhost --port 27017 -d mflix d/tmp/sample_mflix/theaters.json
+ mongoimport -v --host localhost --port 27017 -d mflix d/tmp/sample_mflix/comments.json
+ mongoimport -v --host localhost --port 27017 -d mflix d/tmp/sample_mflix/users.json
+
+ # run mongoimport to import csv data
+ git clone https://github.com/samarkk/test
+ for x in /home/samar/test/fo*;do mongoimport --headerline -d stocks -c fodata --host localhost --port 27017 --type csv  -v $x;done
+
+use mflix
+# To return all documents from the sample_mflix.movies collection:
+db.movies.find()
+# To return all movies where the title equals Titanic from the sample_mflix.movies collection:
+db.movies.find( { "title": "Titanic" } )
+# To return all movies from the sample_mflix.movies collection which are either rated PG or PG-13:
+db.movies.find( { rated: { $in: [ "PG", "PG-13" ] } } )
+# To return movies which were released in Mexico and have an IMDB rating of at least 7:
+db.movies.find( { countries: "Mexico", "imdb.rating": { $gte: 7 } } )
+# To return movies from the sample_mflix.movies collection which were released in 2010 and either won at least 5 awards or have a genre of Drama:
+db.movies.find( {
+     year: 2010,
+     $or: [ { "awards.wins": { $gte: 5 } }, { genres: "Drama" } ]
+} )
+# match on embedded/nested documents
+# create the inventory collection
+# lets do it a devel database
+use devel
+db.inventory.insertMany( [
+   { item: "journal", qty: 25, size: { h: 14, w: 21, uom: "cm" }, status: "A" },
+   { item: "notebook", qty: 50, size: { h: 8.5, w: 11, uom: "in" }, status: "A" },
+   { item: "paper", qty: 100, size: { h: 8.5, w: 11, uom: "in" }, status: "D" },
+   { item: "planner", qty: 75, size: { h: 22.85, w: 30, uom: "cm" }, status: "D" },
+   { item: "postcard", qty: 45, size: { h: 10, w: 15.25, uom: "cm" }, status: "A" }
+]);
+# The following query selects all documents where the field size equals the document { h: 14, w: 21, uom: "cm" }:
+db.inventory.find( { size: { h: 14, w: 21, uom: "cm" } } )
+# Equality matches on the whole embedded document require an exact match of the specified <value> document, including the field order. For example, the following query does not match any documents in the inventory collection:
+
+db.inventory.find(  { size: { w: 21, h: 14, uom: "cm" } }  )
+
+# Specify Equality Match on a Nested Field
+The following example selects all documents where the field uom nested in the size field equals "in":
+
+db.inventory.find( { "size.uom": "in" } )
+
+# insert, create document
+use mflix
+db.movies.insertOne({
+    plot: 'sportsman pushes daughtes to wrestling',
+    genres: ['biography','sport','drama'],
+    runtime: 137,
+    cast: ['Aamir Khan','Sakshi Talwar', 'Fatima Sana Shaikh', 'Sanya Malhotra'],
+    num_mflix_comments: 0,
+    title: 'Dangal',
+    countries: ['India'],
+    imdb: {rating: 8.7, votes: 2341},
+    tomatoes: {rating: 4.3, votes: 379}
+})
+db.movies.updateOne({
+    title: 'Dangal'
+}, {$set:
+{"imdb.rating": 8.9}
+})
+db.movies.find({title: 'Dangal'},{imdb: 1})
+db.movies.deleteMany({title: 'Dangal'})
+# aggregation pipelines
+db.movies.aggregate([
+    {$match: {runtime: {$gt: 80}}}
+])
+db.movies.aggregate([
+    {$match: {runtime: {$gt: 80}}},
+    {$group: {_id: "$year", awards: {$sum: "$awards.wins"}}}
+])
+db.movies.aggregate([
+    {$match: {runtime: {$gt: 80}}},
+    {$group: {_id: "$year", awards: {$sum: "$awards.wins"}}},
+    {$sort: {_id: 1}}
+])
+db.movies.aggregate([
+    {$match: {runtime: {$gt: 80}}},
+    {$group: {_id: "$year", awards: {$sum: "$awards.wins"}}},
+    {$sort: {_id: -1}}
+])
