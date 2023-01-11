@@ -33,6 +33,7 @@ table_help
 # create a table to play around with two column families
 create 't1', 'f1', 'f2'
 # describe the created table
+
 describe 't1'
 # Syntax:  put <'tablename'>,<'rowname'>,<'columnvalue'>,<'value'>
 # put a row into the table without a quailfier
@@ -143,4 +144,10 @@ split 'mybable'
 merge_region <region1name>, <region2name>
 # for mergin non consecutive regions add a third argument true
 
-
+# clone the github test repository
+git clone https://github.com/samarkk/test
+# clone the spark-python directory
+git clone https://github.com/samarkk/spark-python
+# comment the gen-py line and change the parth for file to be imported
+# and then from execute
+python3 spark-python/chbase/load_fo_data.py
