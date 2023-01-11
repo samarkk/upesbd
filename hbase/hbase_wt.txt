@@ -45,7 +45,11 @@ for x in 1..9 do
 put 't1', "r#{x}", 'f1:c1', "r#{x}f1c1v#{x}"
 put 't1', "r#{x}", 'f1:c2', "r#{x}f1c1v#{x}"
 end
-
+# put ten rows in columns c1 and c2 for family f2
+for x in 1..9 do
+put 't1', "r#{x}", 'f2:c1', "r#{x}f2c1v#{x}"
+put 't1', "r#{x}", 'f2:c2', "r#{x}f2c1v#{x}"
+end
 # exercise - add rows from r11 to r20 with each having values for f1 and f2 to t1
 
 # retrieve data
