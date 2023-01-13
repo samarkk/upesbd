@@ -1,4 +1,4 @@
-# Creating an index (with settings)
+## Creating an index (with settings)
 PUT /products
 {
   "settings": {
@@ -7,7 +7,7 @@ PUT /products
   }
 }
 
-# Indexing document with auto generated ID:
+## Indexing document with auto generated ID:
 POST /products/_doc
 {
   "name": "Coffee Maker",
@@ -15,7 +15,7 @@ POST /products/_doc
   "in_stock": 10
 }
 
-# Indexing document with custom ID:
+## Indexing document with custom ID:
 PUT /products/_doc/100
 {
   "name": "Toaster",
