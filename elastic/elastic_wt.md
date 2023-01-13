@@ -159,7 +159,7 @@ GET /products/_search
 curl --cacert [path_to_CA_certificate] -u elastic -H "Content-Type:application/x-ndjson" -XPOST https://localhost:9200/products/_bulk --data-binary "@products-bulk.json"
 
 # Skipping the verification of the certificate (only for local development)
-curl --insecure -u elastic -H "Content-Type:application/x-ndjson" -XPOST https://localhost:9200/products/_bulk --data-binary "@products-bulk.json"
+curl -H "Content-Type:application/x-ndjson" -XPOST http://localhost:9200/products/_bulk --data-binary "@products-bulk.json"
 
 # Searching with the request URI
 # Matching all documents
@@ -320,11 +320,11 @@ GET /products/_search
 
 # Import data for full text search
 # navigate to the directory where there is recipes-bulk.json
-curl -H "Content-Type: application/x-ndjson" -XPOST "http://localhost:9200/recipe/_bulk?pretty" --data-binary "@recipes-bulk.json"
+curl -H "Content-Type: application/x-ndjson" -XPOST "http://localhost:9200/recipe/bulk?pretty" --data-binary "@recipes-bulk.json"
 
 # Flexible matching with match query
 # Standard match query
-GET /recipe/_search
+GET /recipes/_search
 {
   "query": {
     "match": {
@@ -333,7 +333,7 @@ GET /recipe/_search
   }
 }
 Specifying a boolean operator
-GET /recipe/_search
+GET /recipes/_search
 {
   "query": {
     "match": {
@@ -344,7 +344,7 @@ GET /recipe/_search
     }
   }
 }
-GET /recipe/_search
+GET /recipes/_search
 {
   "query": {
     "match": {
@@ -358,7 +358,7 @@ GET /recipe/_search
 
 # Matching phrases
 # The order of terms matters
-GET /recipe/_search
+GET /recipes/_search
 {
   "query": {
     "match_phrase": {
@@ -376,7 +376,7 @@ GET /recipe/_search
 }
 
 # Searching multiple fields
-GET /recipe/_search
+GET /recipes/_search
 {
   "query": {
     "multi_match": {
@@ -387,7 +387,7 @@ GET /recipe/_search
 }
 
 # Adding query clauses to the must key
-GET /recipe/_search
+GET /recipes/_search
 {
   "query": {
     "bool": {
@@ -409,7 +409,7 @@ GET /recipe/_search
   }
 }
 # Moving the range query to the filter key
-GET /recipe/_search
+GET /recipes/_search
 {
   "query": {
     "bool": {
@@ -433,7 +433,7 @@ GET /recipe/_search
   }
 }
 # Adding a query clause to the must_not key
-GET /recipe/_search
+GET /recipes/_search
 {
   "query": {
     "bool": {
@@ -464,7 +464,7 @@ GET /recipe/_search
   }
 }
 # Adding a query clause to the should key
-GET /recipe/_search
+GET /recipes/_search
 {
   "query": {
     "bool": {
